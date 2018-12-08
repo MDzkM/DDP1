@@ -3,13 +3,14 @@ from tkinter import filedialog
 from tkinter.messagebox import showinfo
 import sys
 import os
+import binascii
 
 class Main_Program:
 
     def __init__(self):
         self.root = Tk()
         self.root.title("Hidden Message Creator")
-        self.root.geometry("500x250")
+        self.root.geometry("500x150")
         self.introduction_screen()
 
     def introduction_screen(self):
@@ -26,8 +27,8 @@ class Main_Program:
                                           "Otherwise, click Exit."
                                           "\n\n Note: "
                                           "As of the current version, "
-                                          "this program can only use the "
-                                          "\n.jpg and .png format of an image."
+                                          "this program is only for the "
+                                          "\n.jpg format of an image."
                                          )
                                  )
         introduction.pack()
@@ -102,8 +103,7 @@ class Main_Program:
 
         def next_screen(event = 1):
             if path_assertion():
-                with open(self.image_path, 'rb') as self.image:
-                    self.image_binary = ""
+                with open(self.image_path, "rb") as self.image:
                     self.image_binary = self.image.read()
                 self.second_screen()
 
@@ -117,23 +117,42 @@ class Main_Program:
                                   text = ("Please specify the path of the .jpg file that you wish to use. "
                                   "\nOr browse it interactively with a predesigned GUI."
                                  ))
-        image_prompt.pack(side = TOP)
+        image_prompt.pack()
 
         self.image_name = Entry(self.first_frame, text = "Choose file")
         self.image_name.bind("<Return>", next_screen)
-        self.image_name.pack(side = LEFT)
+        self.image_name.pack()
         self.image_name.focus_set()
 
-        self.continue_button = Button(self.first_frame, text = "Next", command = next_screen)
-        self.continue_button.pack(side = RIGHT)
-
         self.browse_image = Button(self.first_frame, text = "Browse", command = choose_image)
-        self.browse_image.pack(side = RIGHT)
+        self.browse_image.pack()
+
+        self.continue_button = Button(self.first_frame, text = "Next", command = next_screen)
+        self.continue_button.pack()
 
     def second_screen(self):
 
         def message_insertion(event = 1):
-            pass
+            self.message = self.message_entry_box.get()
+            self.message_binary = ""
+            self.limiter = "\\" + str(hex(1111111111111110))[1:]
+
+            print(self.limiter)
+
+            for _ in self.message:
+                self.message_binary += "\\" + str(hex(ord(_)))[1:]
+
+            print(self.message_binary)
+
+            self.message_binary = self.message_binary.encode('utf-8')
+            self.limiter = self.limiter.encode('utf-8')
+
+            self.result = self.message_binary + self.limiter + self.image_binary
+
+            print(self.result)
+
+            with open("result.jpg", "wb") as self.result_image:
+                self.result_image.write(self.result)
 
         self.first_frame.destroy()
 
@@ -144,7 +163,9 @@ class Main_Program:
         message_prompt.pack()
 
         self.message_entry_box = Entry(self.second_frame, text = "Example message")
+        self.message_entry_box.bind("<Return>", message_insertion)
         self.message_entry_box.pack(side = LEFT)
+        self.message_entry_box.focus_set()
 
         self.insert_button = Button(self.second_frame, text = "Insert", command = message_insertion)
         self.insert_button.pack(side = RIGHT)
