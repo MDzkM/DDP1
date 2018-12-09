@@ -30,8 +30,8 @@ class Hidden_Message_Creator:
             self.second_frame = Frame(self.root)
 
         elif self.current_frame == 3:
-            self.third_frame.destroy()
-            self.third_frame = Frame(self.root)
+            self.first_frame.destroy()
+            self.first_frame = Frame(self.root)
 
         self.introduction_frame.pack()
 
@@ -41,7 +41,7 @@ class Hidden_Message_Creator:
                                      "\n\nThis is a program "
                                      "to hide a message inside an image. "
                                      "Please use it wisely!"
-                                     "\nIf you are ready, press Continue. "
+                                     "\nIf you are ready, click Continue. "
                                      "Otherwise, click Exit."
                                      "\n\n Note: "
                                      "As of the current version, "
@@ -65,7 +65,27 @@ class Hidden_Message_Creator:
                                  )
         self.exit_button.pack()
 
-    def first_screen(self):
+        decrypt_introduction = Label(
+                                     self.introduction_frame,
+                                     text = (
+                                             "\n\nYou can also retrieve "
+                                             "messages you have previously "
+                                             "hidden."
+                                             "\nClick on the button "
+                                             "below to start retrieving "
+                                             "messages.\n"
+                                            )
+                                    )
+        decrypt_introduction.pack()
+
+        self.decrypt_continue_button = Button(
+                                              self.introduction_frame,
+                                              text = "Retrieve",
+                                              command = self.third_screen
+                                             )
+        self.decrypt_continue_button.pack()
+
+    def first_screen(self, current_frame = 1):
 
         def path_assertion():
             try:
@@ -122,14 +142,17 @@ class Hidden_Message_Creator:
             if path_assertion():
                 with open(self.image_path, "rb") as self.image:
                     self.image_binary = self.image.read()
-                self.second_screen()
+                if self.current_frame == 1:
+                    self.second_screen()
+                else:
+                    self.fourth_screen()
 
         self.introduction_frame.destroy()
         self.introduction_frame = Frame(self.root)
 
         self.first_frame.pack()
 
-        self.current_frame = 1
+        self.current_frame = current_frame
 
         image_prompt = Label(
                              self.first_frame,
@@ -152,6 +175,13 @@ class Hidden_Message_Creator:
 
         self.continue_button = Button(self.first_frame, text = "Next", command = next_screen)
         self.continue_button.pack()
+
+        self.back_button = Button(self.first_frame, text = "Back", command = self.introduction_screen)
+        self.back_button.pack()
+
+        if self.current_frame == 3:
+            important_note = Label(self.first_frame, text = "\nWARNING! \nYOU CAN ONLY RETRIEVE MESSAGES FROM AN IMAGE\nTHAT HAVE BEEN HIDDEN USING THIS SAME APPLICATION!")
+            important_note.pack()
 
     def second_screen(self):
 
@@ -276,76 +306,49 @@ class Hidden_Message_Creator:
         self.insert_button.pack()
 
     def third_screen(self):
+        self.first_screen(3)
 
-        def path_assertion():
-            try:
-                self.image_path = self.image_name.get()
-
-                if self.image_path == "":
-                    showinfo("Invalid Input", "You have not chosen a file.")
-
-                elif self.image_path[-4:] != ".png":
-                    raise TypeError
-
-                elif os.path.exists(self.image_path):
-                    return True
-
-                else:
-                    raise FileNotFoundError
-
-            except TypeError:
-                self.image_name.delete(0, END)
-                showinfo("Invalid Input", "The file you have chosen is not compatible.")
-
-            except FileNotFoundError:
-                self.image_name.delete(0, END)
-                showinfo("Invalid Input", "The file you have chosen does not exists.")
-
-        def choose_image():
-            '''Choose file as input using GUI.'''
-
-            try:
-                # Ask for input file
-                self.image_name.delete(0, END)
-                self.image_path = ""
-
-                input_window = Tk()
-                input_window.withdraw()
-
-                # Return chosen file
-                self.image_path = filedialog.askopenfilename()
-                self.image_name.delete(0, END)
-                self.image_name.insert(0, f"{self.image_path}")
-
-                if self.image_path == () or self.image_path == "":
-                    self.image_name.delete(0, END)
-                    showinfo("Invalid Input", "You have not chosen a file.")
-
-                elif self.image_path[-4:] != ".png":
-                    raise TypeError
-
-            except TypeError:
-                self.image_name.delete(0, END)
-                showinfo("Invalid Input", "The file you have chosen is not compatible.")
-
-        def find_message():
-            pass
-
+    def fourth_screen(self):
         def find_delimiter():
-            pass
+            if self.image_binary.find(self.delimiter):
+                self.start_index = self.image_binary.find(self.delimiter) + 10
 
-        def decrypt_message():
-            pass
+        def extract_message():
+            self.hidden_message.configure(text = ("\n\n" + self.message))
+            self.success_extract_message = Label(self.third_frame, text = "\nMessage extraction success!\n\nYou can return to the introduction screen or exit the program.\n")
 
-        if self.current_frame == 0:
-            self.introduction_frame.destroy()
-            self.introduction_frame = Frame(self.root)
+            self.return_introduction_button = Button(
+                                                     self.third_frame,
+                                                     text = "Introduction",
+                                                     command = self.introduction_screen
+                                                    )
+            self.return_introduction_button.pack()
 
-        elif self.current_frame == 2:
+            self.exit_button = Button(
+                                            self.third,
+                                            text = "Exit",
+                                            command = self.root.destroy
+                                           )
+            self.exit_button.pack()
+
+        if self.current_frame == 2:
             self.second_frame.destroy()
             self.second_frame = Frame(self.root)
+        elif self.current_frame == 3:
+            self.first_frame.destroy()
+            self.first_frame = Frame(self.root)
 
         self.third_frame.pack()
+        self.current_frame = 4
+
+        extract_prompt = Label(self.third_frame, text = "\n\nPress the button below to extract the message from the image.\n")
+        extract_prompt.pack()
+
+        self.extract_button = Button(self.third_frame, text = "Extract", command = find_delimiter)
+        self.extract_button.pack()
+
+        self.hidden_message = Label(self.third_frame)
+        self.hidden_message.pack()
 
     def mainloop(self):
         self.root.mainloop()
