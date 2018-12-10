@@ -18,6 +18,7 @@ class Hidden_Message_Creator:
         self.delimiter = "\\" + str(hex(1111111111111110))[1:]
         self.delimiter = self.delimiter.encode('utf-8')
         self.introduction_screen()
+        print(self.delimiter)
 
     def introduction_screen(self):
 
@@ -142,6 +143,7 @@ class Hidden_Message_Creator:
             if path_assertion():
                 with open(self.image_path, "rb") as self.image:
                     self.image_binary = self.image.read()
+                self.image_name.delete(0, END)
                 if self.current_frame == 1:
                     self.second_screen()
                 else:
@@ -266,6 +268,8 @@ class Hidden_Message_Creator:
                                  )
             final_message.pack()
 
+            self.message_entry_box.delete(0, END)
+
             self.final_retrieve_button = Button(
                                                 self.second_frame,
                                                 text = "Retrieve",
@@ -311,7 +315,14 @@ class Hidden_Message_Creator:
     def fourth_screen(self):
         def find_delimiter():
             if self.image_binary.find(self.delimiter):
-                self.start_index = self.image_binary.find(self.delimiter) + 10
+                self.start_index = self.image_binary.find(self.delimiter) + 15
+                self.message_binary = self.image_binary[self.start_index:]
+                print(self.message_binary)
+                print(len(self.message_binary))
+                self.message_binary = str(self.message_binary.decode('utf-8'))
+                print(self.message_binary)
+            else:
+                pass
 
         def extract_message():
             self.hidden_message.configure(text = ("\n\n" + self.message))
