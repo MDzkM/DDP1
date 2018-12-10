@@ -180,7 +180,7 @@ class Hidden_Message_Creator:
         self.back_button.pack()
 
         if self.current_frame == 3:
-            important_note = Label(self.first_frame, text = "\nWARNING! \nYOU CAN ONLY RETRIEVE MESSAGES FROM AN IMAGE\nTHAT HAVE BEEN HIDDEN USING THIS SAME APPLICATION!")
+            important_note = Label(self.first_frame, text = "\n\nWARNING! \nYOU CAN ONLY RETRIEVE MESSAGES FROM AN IMAGE\nTHAT HAVE BEEN HIDDEN USING THIS SAME APPLICATION!")
             important_note.pack()
 
     def second_screen(self):
