@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import filedialog
 from tkinter.messagebox import showinfo
+import sys
 import os
 import binascii
 
@@ -10,15 +11,20 @@ class Hidden_Message_Creator:
         self.root = Tk()
         self.root.title("Hidden Message Creator")
         self.root.geometry("500x500")
+
         self.introduction_frame = Frame(self.root)
         self.first_frame = Frame(self.root)
         self.second_frame = Frame(self.root)
         self.third_frame = Frame(self.root)
+
         self.current_frame = 0
+
         self.delimiter = "\\" + str(hex(1111111111111110))[1:]
         self.delimiter = self.delimiter.encode('utf-8')
+
+        self.root.protocol("WM_DELETE_WINDOW", self.finish_program)
+
         self.introduction_screen()
-        print(self.delimiter)
 
     def introduction_screen(self):
 
@@ -34,7 +40,12 @@ class Hidden_Message_Creator:
             self.first_frame.destroy()
             self.first_frame = Frame(self.root)
 
+        elif self.current_frame == 4:
+            self.third_frame.destroy()
+            self.third_frame = Frame(self.root)
+
         self.introduction_frame.pack()
+        self.current_frame = 0
 
         introduction = Label(
                              self.introduction_frame,
@@ -62,7 +73,7 @@ class Hidden_Message_Creator:
         self.exit_button = Button(
                                   self.introduction_frame,
                                   text = "Exit",
-                                  command = self.root.destroy
+                                  command = self.finish_program
                                  )
         self.exit_button.pack()
 
@@ -106,11 +117,17 @@ class Hidden_Message_Creator:
 
             except TypeError:
                 self.image_name.delete(0, END)
-                showinfo("Invalid Input", "The file you have chosen is not compatible.")
+                showinfo(
+                         "Invalid Input",
+                         "The file you have chosen is not compatible."
+                        )
 
             except FileNotFoundError:
                 self.image_name.delete(0, END)
-                showinfo("Invalid Input", "The file you have chosen does not exists.")
+                showinfo(
+                          "Invalid Input",
+                          "The file you have chosen does not exists."
+                         )
 
         def choose_image():
             '''Choose file as input using GUI.'''
@@ -119,9 +136,6 @@ class Hidden_Message_Creator:
                 # Ask for input file
                 self.image_name.delete(0, END)
                 self.image_path = ""
-
-                input_window = Tk()
-                input_window.withdraw()
 
                 # Return chosen file
                 self.image_path = filedialog.askopenfilename()
@@ -137,20 +151,32 @@ class Hidden_Message_Creator:
 
             except TypeError:
                 self.image_name.delete(0, END)
-                showinfo("Invalid Input", "The file you have chosen is not compatible.")
+                showinfo(
+                         "Invalid Input",
+                         "The file you have chosen is not compatible."
+                        )
 
         def next_screen(event = 1):
+
             if path_assertion():
                 with open(self.image_path, "rb") as self.image:
                     self.image_binary = self.image.read()
+
                 self.image_name.delete(0, END)
+
                 if self.current_frame == 1:
                     self.second_screen()
+
                 else:
                     self.fourth_screen()
 
-        self.introduction_frame.destroy()
-        self.introduction_frame = Frame(self.root)
+        if self.current_frame == 0:
+            self.introduction_frame.destroy()
+            self.introduction_frame = Frame(self.root)
+
+        elif self.current_frame == 2:
+            self.second_frame.destroy()
+            self.second_frame = Frame(self.root)
 
         self.first_frame.pack()
 
@@ -172,39 +198,67 @@ class Hidden_Message_Creator:
         self.image_name.pack()
         self.image_name.focus_set()
 
-        self.browse_image = Button(self.first_frame, text = "Browse", command = choose_image)
+        self.browse_image = Button(
+                                   self.first_frame,
+                                   text = "Browse",
+                                   command = choose_image
+                                  )
         self.browse_image.pack()
 
-        self.continue_button = Button(self.first_frame, text = "Next", command = next_screen)
+        self.continue_button = Button(
+                                       self.first_frame,
+                                       text = "Next",
+                                       command = next_screen
+                                      )
         self.continue_button.pack()
 
-        self.back_button = Button(self.first_frame, text = "Back", command = self.introduction_screen)
+        self.back_button = Button(
+                                  self.first_frame,
+                                  text = "Back",
+                                  command = self.introduction_screen
+                                 )
         self.back_button.pack()
 
         if self.current_frame == 3:
-            important_note = Label(self.first_frame, text = "\n\nWARNING! \nYOU CAN ONLY RETRIEVE MESSAGES FROM AN IMAGE\nTHAT HAVE BEEN HIDDEN USING THIS SAME APPLICATION!")
+            important_note = Label(
+                                   self.first_frame,
+                                   text = (
+                                           "\n\nWARNING! \nYOU CAN ONLY "
+                                           "RETRIEVE MESSAGES FROM AN IMAGE\n"
+                                           "THAT HAVE BEEN HIDDEN USING THIS "
+                                           "SAME APPLICATION!"
+                                          )
+                                  )
             important_note.pack()
 
     def second_screen(self):
 
         def message_insertion(event = 1):
             self.message = self.message_entry_box.get()
-            self.message_binary = ""
+            self.message_binary = binascii.hexlify(self.message.encode('utf-8'))
 
-            for _ in self.message:
-                self.message_binary += "\\" + str(hex(ord(_)))[1:]
-
-            self.message_binary = self.message_binary.encode('utf-8')
-
-            self.result = self.image_binary + self.delimiter + self.message_binary
+            self.result = (
+                           self.image_binary +
+                           self.delimiter +
+                           self.message_binary
+                          )
 
             insertion_success()
 
         def insertion_success():
-            success_message = Label(self.second_frame, text = "\nInsertion successful!")
+            success_message = Label(
+                                    self.second_frame,
+                                    text = "\nInsertion successful!"
+                                   )
             success_message.pack()
 
-            new_image_path_prompt = Label(self.second_frame, text = "\nPlease specify the path to save the new image file:")
+            new_image_path_prompt = Label(
+                                          self.second_frame,
+                                          text = (
+                                                  "\nPlease specify the path "
+                                                  "to save the new image file:"
+                                                 )
+                                         )
             new_image_path_prompt.pack()
 
             self.new_image_entry_box = Entry(self.second_frame)
@@ -212,10 +266,18 @@ class Hidden_Message_Creator:
             self.new_image_entry_box.pack()
             self.new_image_entry_box.focus_set()
 
-            self.new_path_browse_button = Button(self.second_frame, text = "Browse", command = choose_path)
+            self.new_path_browse_button = Button(
+                                                 self.second_frame,
+                                                 text = "Browse",
+                                                 command = choose_path
+                                                )
             self.new_path_browse_button.pack()
 
-            self.save_button = Button(self.second_frame, text = "Save", command = save_file)
+            self.save_button = Button(
+                                      self.second_frame,
+                                      text = "Save",
+                                      command = save_file
+                                     )
             self.save_button.pack()
 
         def choose_path():
@@ -226,14 +288,20 @@ class Hidden_Message_Creator:
 
                 if self.new_image_path == () or self.new_image_path == "":
                     self.new_image_entry_box.delete(0, END)
-                    showinfo("Invalid Input", "You have not specified the filename.")
+                    showinfo(
+                             "Invalid Input",
+                             "You have not specified the filename."
+                            )
 
                 elif self.new_image_path[-4:] != ".png":
                     raise TypeError
 
             except TypeError:
                 self.new_image_entry_box.delete(0, END)
-                showinfo("Invalid Input", "The file you have chosen is not compatible.")
+                showinfo(
+                         "Invalid Input",
+                         "The file you have chosen is not compatible."
+                        )
 
         def save_file(event = 1):
             try:
@@ -252,7 +320,10 @@ class Hidden_Message_Creator:
 
             except TypeError:
                 self.new_image_entry_box.delete(0, END)
-                showinfo("Invalid Input", "The file you specified is not compatible.")
+                showinfo(
+                         "Invalid Input",
+                         "The file you specified is not compatible."
+                        )
 
         def final_success():
             final_message = Label(
@@ -287,7 +358,7 @@ class Hidden_Message_Creator:
             self.final_exit_button = Button(
                                             self.second_frame,
                                             text = "Exit",
-                                            command = self.root.destroy
+                                            command = self.finish_program
                                            )
             self.final_exit_button.pack()
 
@@ -298,15 +369,25 @@ class Hidden_Message_Creator:
 
         self.current_frame = 2
 
-        message_prompt = Label(self.second_frame, text = "\n\nWrite your message below:")
+        message_prompt = Label(
+                               self.second_frame,
+                               text = "\n\nWrite your message below:"
+                              )
         message_prompt.pack()
 
-        self.message_entry_box = Entry(self.second_frame, text = "Example message")
+        self.message_entry_box = Entry(
+                                       self.second_frame,
+                                       text = "Example message"
+                                      )
         self.message_entry_box.bind("<Return>", message_insertion)
         self.message_entry_box.pack()
         self.message_entry_box.focus_set()
 
-        self.insert_button = Button(self.second_frame, text = "Insert", command = message_insertion)
+        self.insert_button = Button(
+                                    self.second_frame,
+                                    text = "Insert",
+                                    command = message_insertion
+                                   )
         self.insert_button.pack()
 
     def third_screen(self):
@@ -314,20 +395,41 @@ class Hidden_Message_Creator:
 
     def fourth_screen(self):
         def find_delimiter():
-            if self.image_binary.find(self.delimiter):
+
+            if self.image_binary.find(self.delimiter) == -1:
+                showinfo(
+                         "Message Not Found",
+                         "There are no messages hidden in this image\n"
+                        )
+                final_buttons()
+
+            else:
                 self.start_index = self.image_binary.find(self.delimiter) + 15
                 self.message_binary = self.image_binary[self.start_index:]
-                print(self.message_binary)
-                print(len(self.message_binary))
-                self.message_binary = str(self.message_binary.decode('utf-8'))
-                print(self.message_binary)
-            else:
-                pass
+                self.message_binary = binascii.unhexlify(self.message_binary)
+                self.message = self.message_binary.decode('utf-8')
+
+                extract_message()
+
+
 
         def extract_message():
-            self.hidden_message.configure(text = ("\n\n" + self.message))
-            self.success_extract_message = Label(self.third_frame, text = "\nMessage extraction success!\n\nYou can return to the introduction screen or exit the program.\n")
+            self.hidden_message.configure(text = ("\n" + self.message))
+            self.success_extract_message = Label(
+                                                 self.third_frame,
+                                                 text = (
+                                                         "\nMessage extraction "
+                                                         "success!\n\nYou can "
+                                                         "return to the "
+                                                         "introduction screen "
+                                                         "or exit the "
+                                                         "program.\n"
+                                                        )
+                                                )
+            self.success_extract_message.pack()
+            final_buttons()
 
+        def final_buttons():
             self.return_introduction_button = Button(
                                                      self.third_frame,
                                                      text = "Introduction",
@@ -336,30 +438,41 @@ class Hidden_Message_Creator:
             self.return_introduction_button.pack()
 
             self.exit_button = Button(
-                                            self.third,
+                                            self.third_frame,
                                             text = "Exit",
-                                            command = self.root.destroy
+                                            command = self.finish_program
                                            )
             self.exit_button.pack()
 
-        if self.current_frame == 2:
-            self.second_frame.destroy()
-            self.second_frame = Frame(self.root)
-        elif self.current_frame == 3:
-            self.first_frame.destroy()
-            self.first_frame = Frame(self.root)
+
+        self.first_frame.destroy()
+        self.first_frame = Frame(self.root)
 
         self.third_frame.pack()
         self.current_frame = 4
 
-        extract_prompt = Label(self.third_frame, text = "\n\nPress the button below to extract the message from the image.\n")
+        extract_prompt = Label(
+                               self.third_frame,
+                               text = (
+                                       "\n\nPress the button below to extract "
+                                       "the message from the image.\n"
+                                      )
+                              )
         extract_prompt.pack()
 
-        self.extract_button = Button(self.third_frame, text = "Extract", command = find_delimiter)
+        self.extract_button = Button(
+                                     self.third_frame,
+                                     text = "Extract",
+                                     command = find_delimiter
+                                    )
         self.extract_button.pack()
 
-        self.hidden_message = Label(self.third_frame)
+        self.hidden_message = Label(self.third_frame, font = "bold")
         self.hidden_message.pack()
+
+    def finish_program(self):
+        self.root.destroy()
+        sys.exit()
 
     def mainloop(self):
         self.root.mainloop()
