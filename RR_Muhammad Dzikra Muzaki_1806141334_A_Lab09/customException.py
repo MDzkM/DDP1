@@ -1,1 +1,0 @@
-class InvalidInputError(Exception): pass
